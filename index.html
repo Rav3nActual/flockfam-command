@@ -189,7 +189,7 @@ table.grid td.spcell .ce{color:var(--accent)}
       <button data-view="todo"><span class="ic">✓</span> To-Do</button>
       <button data-view="launch"><span class="ic">★</span> Launch Plan</button>
       <button data-view="reaper"><span class="ic">🪶</span> Reaper Rav3n</button>
-      <button data-view="drops"><span class="ic">▲</span> Drops &amp; Product</button>
+      <button data-view="drops"><span class="ic">▲</span> Drop Schedule</button>
       <button data-view="growth"><span class="ic">◎</span> Growth</button>
       <button data-view="ideas"><span class="ic">✦</span> Ideas</button>
       <button data-view="docs"><span class="ic">▤</span> Docs</button>
@@ -404,22 +404,7 @@ function viewLaunch(){
 
 /* ===== DROPS & PRODUCT ===== */
 function viewDrops(){
-  const p=DATA.products;
-  let h=`<div class="page-head"><div><h1>Drops &amp; Product</h1><p>2026 product line-up and drop calendar.</p></div></div>`;
-  h+=`<div class="panel"><div class="panel-head"><h2>2026 Product Line-Up <span class="count">${p.length}</span></h2><button class="btn sm" data-add="products">+ Product</button></div><div class="panel-body">`;
-  if(p.length){
-    h+=`<table class="tbl"><thead><tr><th>Item</th><th class="right">Proto</th><th class="right">Design OK</th><th class="right">Done</th><th class="right">Shipped</th><th>Drop</th><th></th></tr></thead><tbody>`;
-    p.forEach(x=>{h+=`<tr class="row"><td class="title-cell">${esc(x.item)}${x.notes?`<div class="muted2" style="font-weight:400;font-size:12.5px">${esc(x.notes)}</div>`:''}</td>
-      ${cbCell("products",x.id,"order_placed_prototype",x.order_placed_prototype)}
-      ${cbCell("products",x.id,"okayed_design",x.okayed_design)}
-      ${cbCell("products",x.id,"completed",x.completed)}
-      ${cbCell("products",x.id,"shipping_confirmation",x.shipping_confirmation)}
-      <td class="muted2">${x.drop_date?fmtShort(x.drop_date):'—'}</td>
-      <td><div class="rowacts">${editDel("products",x.id)}</div></td></tr>`;});
-    h+=`</tbody></table>`;
-  } else h+=`<div class="empty">No products yet.</div>`;
-  h+=`</div></div>`;
-
+  let h=`<div class="page-head"><div><h1>Drop Schedule</h1><p>2026 drop schedule — patches, apparel, misc &amp; special projects by week.</p></div></div>`;
   h+=dropGrid();
   return h;
 }
