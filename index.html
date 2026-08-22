@@ -125,6 +125,22 @@ tr.row:hover .rowacts{opacity:1}
 .empty{padding:34px 18px;text-align:center;color:var(--muted2);font-size:13.5px}
 .banner{margin:0 18px 14px;padding:11px 14px;background:var(--blue-soft);border:1px solid rgba(90,169,230,.3);border-radius:10px;color:#bfe0f7;font-size:12.5px;display:flex;gap:9px;align-items:flex-start}
 
+/* ---------- DROP SCHEDULE GRID ---------- */
+.gridwrap{overflow-x:auto;padding:0}
+table.grid{border-collapse:collapse;width:100%;min-width:920px;font-size:12.5px}
+table.grid th,table.grid td{border:1px solid var(--border);padding:0}
+table.grid thead th{background:var(--bg2);color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:11px;padding:7px 8px;text-align:center}
+table.grid th.wk{font-size:10px;color:var(--muted2);font-weight:600}
+table.grid td.mcol,table.grid th.mcol{background:var(--bg2);font-weight:600;color:var(--text);padding:8px 12px;white-space:nowrap;text-align:left;position:sticky;left:0;z-index:1;min-width:96px}
+table.grid th.spcol{background:var(--accent-soft);color:var(--accent)}
+table.grid td.gcell{min-width:80px;vertical-align:middle}
+table.grid td.grpend{border-right:2px solid var(--border2)}
+table.grid .ce{display:block;min-height:30px;padding:7px 8px;color:var(--text);outline:none;cursor:text;line-height:1.35}
+table.grid .ce:focus{background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
+table.grid .ce:empty::before{content:"+";color:var(--muted2);opacity:.3}
+table.grid tbody tr:hover td.mcol{color:var(--accent)}
+table.grid td.spcell .ce{color:var(--accent)}
+
 /* ---------- MODAL ---------- */
 #modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:22px;z-index:50}
 .modal-card{width:100%;max-width:460px;background:var(--panel);border:1px solid var(--border2);border-radius:var(--radius);box-shadow:var(--shadow);max-height:90vh;overflow:auto}
@@ -198,7 +214,7 @@ const SUPABASE_KEY = "sb_publishable_XG4tDiLVLs3mwhKrj_kFRg_nmDrFSjk";
 const LAUNCH_DATE = "2026-09-28";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let DATA = {tasks:[],launch_milestones:[],products:[],drops:[],influencers:[],significant_dates:[],documents:[]};
+let DATA = {tasks:[],launch_milestones:[],products:[],drops:[],influencers:[],significant_dates:[],documents:[],drop_schedule:[]};
 let VIEW = "overview";
 
 /* ---------- helpers ---------- */
@@ -221,10 +237,15 @@ async function initAuth(){
 }
 async function doLogin(){
   const email=$("#email").value.trim(), password=$("#password").value;
-  $("#loginErr").textContent="";
-  const {data,error}=await sb.auth.signInWithPassword({email,password});
-  if(error){$("#loginErr").textContent=error.message;return;}
-  enterApp(data.session);
+  const btn=$("#loginBtn"), err=$("#loginErr");
+  err.textContent=""; btn.disabled=true; btn.textContent="Signing in…";
+  const done=(m)=>{ err.textContent=m; btn.disabled=false; btn.textContent="Sign in"; };
+  try{
+    const {data,error}=await sb.auth.signInWithPassword({email,password});
+    if(error){ done((error.message||"Sign-in error")+(error.status?` (${error.status})`:"")); return; }
+    if(!data||!data.session){ done("No session returned — double-check email and password."); return; }
+    enterApp(data.session);
+  }catch(e){ done("Login failed: "+((e&&e.message)?e.message:String(e))); }
 }
 function enterApp(session){
   $("#login").classList.add("hidden");
@@ -239,8 +260,10 @@ $("#signOut").onclick=async()=>{await sb.auth.signOut();};
 /* ---------- data ---------- */
 async function loadAll(){
   const tables=Object.keys(DATA);
-  const res=await Promise.all(tables.map(t=>sb.from(t).select("*")));
-  tables.forEach((t,i)=>{ DATA[t]=res[i].data||[]; });
+  const res=await Promise.all(tables.map(t=>sb.from(t).select("*").then(r=>r).catch(e=>({error:e,data:[]}))));
+  const errs=[];
+  tables.forEach((t,i)=>{ if(res[i].error){errs.push(t+": "+(res[i].error.message||res[i].error));} DATA[t]=res[i].data||[]; });
+  if(errs.length) console.warn("FF load issues:",errs);
   // client sort
   DATA.tasks.sort((a,b)=>(a.sort_order-b.sort_order));
   DATA.products.sort((a,b)=>(a.sort_order-b.sort_order));
@@ -387,15 +410,7 @@ function viewDrops(){
   } else h+=`<div class="empty">No products yet.</div>`;
   h+=`</div></div>`;
 
-  h+=`<div class="panel"><div class="panel-head"><h2>Drop Calendar <span class="count">${DATA.drops.length}</span></h2><button class="btn sm" data-add="drops">+ Drop</button></div>`;
-  h+=`<div class="banner">↻ Synced from your Google Drop Schedule sheet (2026 plan). Edits you make here live in your dashboard — ask me to re-sync the sheet anytime it changes.</div>`;
-  h+=`<div class="panel-body">`;
-  if(DATA.drops.length){
-    h+=`<table class="tbl"><thead><tr><th>Drop</th><th>Date</th><th>Status</th><th></th></tr></thead><tbody>`;
-    DATA.drops.sort((a,b)=>(a.drop_date||"")<(b.drop_date||"")?-1:1).forEach(x=>{h+=`<tr class="row"><td class="title-cell">${esc(x.name)}</td><td class="muted2">${x.drop_date?fmtDate(x.drop_date):'—'}</td><td class="muted">${esc(x.status||'')}</td><td><div class="rowacts">${editDel("drops",x.id)}</div></td></tr>`;});
-    h+=`</tbody></table>`;
-  } else h+=`<div class="empty">No drops scheduled.</div>`;
-  h+=`</div></div>`;
+  h+=dropGrid();
   return h;
 }
 
@@ -416,6 +431,40 @@ function viewGrowth(){
   } else h+=`<div class="empty">No contacts yet.</div>`;
   h+=`</div></div>`;
   return h;
+}
+
+/* ===== DROP SCHEDULE GRID ===== */
+const GRID_YEAR=2026;
+const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+function dropGrid(){
+  const cats=["Patches","Apparel","Misc"];
+  const rows=DATA.drop_schedule.filter(r=>r.year===GRID_YEAR);
+  const lookup={}; rows.forEach(r=>{ lookup[`${r.month}|${r.category}|${r.week||0}`]=r; });
+  const cell=(m,cat,w,extra)=>{ const r=lookup[`${m}|${cat}|${w||0}`]; const val=r?esc(r.item):"";
+    return `<td class="gcell ${extra||''}"><span class="ce" contenteditable="true" data-cellkey="${m}|${cat}|${w||0}">${val}</span></td>`; };
+  let h=`<div class="panel"><div class="panel-head"><h2>Drop Schedule <span class="count">${GRID_YEAR}</span></h2><span class="muted2" style="font-size:12px">Click any cell to edit — saves live</span></div>`;
+  h+=`<div class="gridwrap"><table class="grid"><thead>`;
+  h+=`<tr><th class="mcol" rowspan="2">Month</th><th colspan="4">Patches</th><th colspan="4">Apparel</th><th colspan="4">Misc</th><th class="spcol" rowspan="2">Special Projects</th></tr>`;
+  h+=`<tr>`+cats.map(()=>[1,2,3,4].map(w=>`<th class="wk">W${w}</th>`).join("")).join("")+`</tr></thead><tbody>`;
+  MONTHS.forEach((mn,i)=>{ const m=i+1;
+    h+=`<tr><td class="mcol">${mn}</td>`;
+    cats.forEach(cat=>{ for(let w=1;w<=4;w++) h+=cell(m,cat,w, w===4?'grpend':''); });
+    h+=cell(m,"Special",null,"spcell");
+    h+=`</tr>`;
+  });
+  h+=`</tbody></table></div></div>`;
+  return h;
+}
+async function setCell(month,category,week,value){
+  value=(value||"").trim();
+  const existing=DATA.drop_schedule.find(r=>r.year===GRID_YEAR&&r.month===month&&r.category===category&&(r.week||0)===(week||0));
+  if(existing){
+    if(value===existing.item) return;
+    if(!value){ const {error}=await sb.from("drop_schedule").delete().eq("id",existing.id); if(error){toast("Delete failed");return;} DATA.drop_schedule=DATA.drop_schedule.filter(r=>r.id!==existing.id); toast("Cleared"); }
+    else { const {error}=await sb.from("drop_schedule").update({item:value}).eq("id",existing.id); if(error){toast("Save failed");return;} existing.item=value; toast("Saved"); }
+  } else if(value){
+    const {error}=await sb.from("drop_schedule").insert({year:GRID_YEAR,month,category,week:week||null,item:value}); if(error){toast("Add failed");return;} await loadAll(); toast("Saved");
+  }
 }
 
 /* ===== DOCS ===== */
@@ -453,6 +502,10 @@ function bindActions(){
   document.querySelectorAll("[data-status]").forEach(s=>s.onchange=()=>{const[t,id]=s.dataset.status.split("|");patchRow(t,id,{status:s.value||null});});
   document.querySelectorAll("[data-cb]").forEach(c=>c.onclick=()=>{const[t,id,f]=c.dataset.cb.split("|");patchRow(t,id,{[f]:c.dataset.val!=="1"});});
   document.querySelectorAll("[data-toggle-mile]").forEach(c=>c.onclick=()=>{const id=c.dataset.toggleMile;const done=c.dataset.cur==="Complete";patchRow("launch_milestones",id,{status:done?"Not Started":"Complete"});});
+  document.querySelectorAll(".grid .ce").forEach(c=>{
+    c.addEventListener("blur",()=>{const[m,cat,w]=c.dataset.cellkey.split("|");setCell(+m,cat,w==="0"?null:+w,c.textContent);});
+    c.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();c.blur();}});
+  });
 }
 
 /* ---------- MODAL / forms ---------- */
