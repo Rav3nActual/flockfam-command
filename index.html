@@ -188,6 +188,7 @@ table.grid td.spcell .ce{color:var(--accent)}
       <button data-view="overview" class="active"><span class="ic">◆</span> Overview</button>
       <button data-view="todo"><span class="ic">✓</span> To-Do</button>
       <button data-view="launch"><span class="ic">★</span> Launch Plan</button>
+      <button data-view="reaper"><span class="ic">🪶</span> Reaper Rav3n</button>
       <button data-view="drops"><span class="ic">▲</span> Drops &amp; Product</button>
       <button data-view="growth"><span class="ic">◎</span> Growth</button>
       <button data-view="ideas"><span class="ic">✦</span> Ideas</button>
@@ -216,7 +217,7 @@ const SUPABASE_KEY = "sb_publishable_XG4tDiLVLs3mwhKrj_kFRg_nmDrFSjk";
 const LAUNCH_DATE = "2026-09-28";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let DATA = {tasks:[],launch_milestones:[],products:[],drops:[],influencers:[],significant_dates:[],documents:[],drop_schedule:[],ideas:[]};
+let DATA = {tasks:[],launch_milestones:[],products:[],drops:[],influencers:[],significant_dates:[],documents:[],drop_schedule:[],ideas:[],reaper_stages:[],reaper_items:[]};
 let VIEW = "overview";
 
 /* ---------- helpers ---------- */
@@ -301,6 +302,7 @@ function render(){
   if(VIEW==="overview")c.innerHTML=viewOverview();
   else if(VIEW==="todo")c.innerHTML=viewTodo();
   else if(VIEW==="launch")c.innerHTML=viewLaunch();
+  else if(VIEW==="reaper")c.innerHTML=viewReaper();
   else if(VIEW==="drops")c.innerHTML=viewDrops();
   else if(VIEW==="growth")c.innerHTML=viewGrowth();
   else if(VIEW==="ideas")c.innerHTML=viewIdeas();
@@ -449,6 +451,33 @@ function viewGrowth(){
   return h;
 }
 
+/* ===== REAPER RAV3N ===== */
+function viewReaper(){
+  const stages=DATA.reaper_stages.slice().sort((a,b)=>a.stage_no-b.stage_no);
+  let h=`<div class="page-head"><div><h1>Reaper Rav3n 2026</h1><p>FOLLOW THE WHITE RAVEN — the Halloween hunt, kept separate from First Flight.</p></div></div>`;
+  h+=`<div class="banner" style="background:var(--red-soft);border-color:rgba(229,100,90,.35);color:#f0b3ae">🔒 PRIVATE — this contains every solution. Never screenshot, share, or reference it in public content.</div>`;
+  h+=`<div class="panel pad"><div style="font-size:13.5px;line-height:1.65">
+    <div><span class="muted2">Core line:</span> The White Raven marks the trail. The Reaper Raven closes it.</div>
+    <div style="margin-top:6px"><span class="muted2">Commitment:</span> Runs 2026 — door opens Oct 31, ten boxes, no fallback year. Aug 31 is the hard design deadline. If time runs short, cut stages, not the event.</div>
+    <div style="margin-top:6px"><span class="muted2">Minimum viable chain:</span> Stage 1 → 2 → 5 → 6 → 7.</div>
+  </div></div>`;
+  h+=`<div class="panel"><div class="panel-head"><h2>The Chain <span class="count">${stages.length} stages</span></h2><button class="btn sm" data-add="reaper_stages">+ Stage</button></div><div class="panel-body">`;
+  if(stages.length){
+    stages.forEach(s=>{h+=`<div class="phase"><div class="phase-top"><span class="nm">Stage ${esc(String(s.stage_no))} — ${esc(s.title)}</span><span style="display:flex;gap:6px;align-items:center">${statusSelect("reaper_stages",s.id,s.status,["Pending","Building","Live","Done"])}<span class="rowacts" style="opacity:1">${editDel("reaper_stages",s.id)}</span></span></div>${s.detail?`<div class="muted" style="font-size:13px;margin-top:3px">${esc(s.detail)}</div>`:''}</div>`;});
+  } else h+=`<div class="empty">No stages yet.</div>`;
+  h+=`</div></div>`;
+  const secs=["The Box","Open Items","Test Plan (W10)"];
+  h+=`<div class="grid2">`;
+  secs.forEach(sec=>{const items=DATA.reaper_items.filter(x=>x.section===sec).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+    h+=`<div class="panel"><div class="panel-head"><h2>${esc(sec)} <span class="count">${items.filter(i=>i.done).length}/${items.length}</span></h2><button class="btn sm" data-add="reaper_items" data-sec="${esc(sec)}">+ Add</button></div><div class="panel-body">`;
+    if(items.length){ items.forEach(x=>{h+=`<div class="mile ${x.done?'done':''}"><span class="chk ${x.done?'on':''}" data-ritem="${x.id}" data-done="${x.done?1:0}">${x.done?'✓':''}</span><span class="t">${esc(x.item)}</span><div class="rowacts">${editDel("reaper_items",x.id)}</div></div>`;}); }
+    else h+=`<div class="empty">Nothing yet.</div>`;
+    h+=`</div></div>`;
+  });
+  h+=`</div>`;
+  return h;
+}
+
 /* ===== IDEAS ===== */
 function viewIdeas(){
   const cats=["New Products","Patch Ideas","Random Ideas","Random Raven Ideas","Scavenger Hunt","App Features"];
@@ -531,7 +560,8 @@ function cbCell(table,id,field,val){
 function editDel(table,id){return `<button class="iconbtn" data-edit="${table}|${id}">Edit</button><button class="iconbtn danger" data-del="${table}|${id}">✕</button>`;}
 
 function bindActions(){
-  document.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>openModal(b.dataset.add,null,b.dataset.cat?{category:b.dataset.cat}:null));
+  document.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>{const p={};if(b.dataset.cat)p.category=b.dataset.cat;if(b.dataset.sec)p.section=b.dataset.sec;openModal(b.dataset.add,null,Object.keys(p).length?p:null);});
+  document.querySelectorAll("[data-ritem]").forEach(c=>c.onclick=()=>patchRow("reaper_items",c.dataset.ritem,{done:c.dataset.done!=="1"}));
   document.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>{const[t,id]=b.dataset.edit.split("|");openModal(t,DATA[t].find(x=>x.id===id));});
   document.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{const[t,id]=b.dataset.del.split("|");delRow(t,id);});
   document.querySelectorAll("[data-status]").forEach(s=>s.onchange=()=>{const[t,id]=s.dataset.status.split("|");patchRow(t,id,{status:s.value||null});});
@@ -592,6 +622,14 @@ const FORMS={
     {k:"category",l:"List",t:"select",opts:["New Products","Patch Ideas","Random Ideas","Random Raven Ideas","Scavenger Hunt","App Features"]},
     {k:"item",l:"Idea",t:"text",req:1},
     {k:"note",l:"Note (optional)",t:"text"}]},
+  reaper_stages:{title:"Stage",fields:[
+    {k:"stage_no",l:"Stage #",t:"number",req:1},
+    {k:"title",l:"Title",t:"text",req:1},
+    {k:"detail",l:"Detail",t:"textarea"},
+    {k:"status",l:"Status",t:"select",opts:["Pending","Building","Live","Done"]}]},
+  reaper_items:{title:"Item",fields:[
+    {k:"section",l:"Section",t:"select",opts:["The Box","Open Items","Test Plan (W10)"]},
+    {k:"item",l:"Item",t:"text",req:1}]},
 };
 function openModal(table,row,preset){
   const cfg=FORMS[table];const editing=!!(row&&row.id);row=row||preset||{};
