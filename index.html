@@ -20,7 +20,8 @@
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+#content{min-width:0}
 a{color:var(--accent);text-decoration:none}
 button{font-family:inherit;cursor:pointer}
 input,select,textarea{font-family:inherit;font-size:14px}
@@ -163,10 +164,10 @@ table.grid td.spcell .ce{color:var(--accent)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(-4px)}
 .loading{padding:60px;text-align:center;color:var(--muted2)}
 @media(max-width:760px){
-  #app{grid-template-columns:1fr}
-  .sidebar{position:fixed;z-index:40;left:0;top:0;transform:translateX(-100%);transition:transform .2s;width:232px}
+  .appbody{grid-template-columns:1fr}
+  .sidebar{position:fixed;z-index:40;left:0;top:46px;height:calc(100vh - 46px);transform:translateX(-100%);transition:transform .2s;width:232px}
   .sidebar.open{transform:none}
-  .main{padding:18px 16px 60px}
+  .main{padding:18px 16px 60px;min-width:0}
   #menuBtn2{display:inline-flex}
   #topbar{justify-content:center;gap:9px}
   .tb-title{font-size:12px;letter-spacing:.13em}
