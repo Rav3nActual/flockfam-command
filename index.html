@@ -475,7 +475,7 @@ function viewReaper(){
     stages.forEach(s=>{h+=`<div class="phase"><div class="phase-top"><span class="nm">Stage ${esc(String(s.stage_no))} — ${esc(s.title)}</span><span style="display:flex;gap:6px;align-items:center">${statusSelect("reaper_stages",s.id,s.status,["Pending","Building","Live","Done"])}<span class="rowacts" style="opacity:1">${editDel("reaper_stages",s.id)}</span></span></div>${s.detail?`<div class="muted" style="font-size:13px;margin-top:3px">${esc(s.detail)}</div>`:''}</div>`;});
   } else h+=`<div class="empty">No stages yet.</div>`;
   h+=`</div></div>`;
-  const secs=["The Box","Open Items","Test Plan (W10)"];
+  const secs=["The Box","Test Plan (W10)"];
   h+=`<div class="grid2">`;
   secs.forEach(sec=>{const items=DATA.reaper_items.filter(x=>x.section===sec).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
     h+=`<div class="panel"><div class="panel-head"><h2>${esc(sec)} <span class="count">${items.filter(i=>i.done).length}/${items.length}</span></h2><button class="btn sm" data-add="reaper_items" data-sec="${esc(sec)}">+ Add</button></div><div class="panel-body">`;
