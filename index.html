@@ -105,6 +105,9 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .right{text-align:right}
 .rowacts{display:flex;gap:6px;justify-content:flex-end;opacity:0;transition:opacity .12s}
 tr.row:hover .rowacts{opacity:1}
+.mile .rowacts{opacity:.55;flex:none}
+.mile:hover .rowacts,.mile:focus-within .rowacts{opacity:1}
+@media(hover:none){.mile .rowacts{opacity:1}}
 .iconbtn{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:7px;padding:4px 8px;font-size:12px}
 .iconbtn:hover{color:var(--text);border-color:var(--border2)}
 .iconbtn.danger:hover{color:var(--red);border-color:var(--red)}
