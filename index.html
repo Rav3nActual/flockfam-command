@@ -346,9 +346,15 @@ function viewOverview(){
   const miles=DATA.launch_milestones, mdone=miles.filter(m=>m.status==="Complete").length;
   const mpct=miles.length?Math.round(mdone/miles.length*100):0;
   const dToLaunch=daysBetween(today(),new Date(LAUNCH_DATE+"T00:00:00"));
-  const allDrops=[...DATA.drops.map(d=>({name:d.name,date:d.drop_date})),...DATA.products.filter(p=>p.drop_date).map(p=>({name:p.item,date:p.drop_date}))]
-      .filter(d=>d.date).sort((a,b)=>a.date<b.date?-1:1);
-  const nextDrop=allDrops.find(d=>!isOverdue(d.date))||allDrops[allDrops.length-1];
+  const now=today();
+  const cy=now.getFullYear(), cm=now.getMonth()+1, cw=Math.floor((now.getDate()-1)/7)+1;
+  const scheduledDrops=DATA.drop_schedule
+      .filter(d=>d.item&&d.year&&d.month)
+      .map(d=>({...d,weekNum:d.week||1}))
+      .filter(d=>d.year>cy||(d.year===cy&&(d.month>cm||(d.month===cm&&d.weekNum>=cw))))
+      .sort((a,b)=>(a.year-b.year)||(a.month-b.month)||(a.weekNum-b.weekNum)||((a.sort_order||0)-(b.sort_order||0)));
+  const nextDrop=scheduledDrops[0]||null;
+  const nextDropWhen=nextDrop?`${new Date(nextDrop.year,nextDrop.month-1,1).toLocaleString(undefined,{month:"long"})}${nextDrop.week?` · Week ${nextDrop.week}`:""}`:"no drops scheduled";
   const upDates=DATA.significant_dates.map(d=>({...d,occ:nextOccurrence(d.event_date)})).filter(d=>d.occ)
       .sort((a,b)=>a.occ-b.occ).slice(0,5);
 
@@ -357,7 +363,7 @@ function viewOverview(){
     <div class="stat"><div class="lbl">Open Tasks</div><div class="val ${overdue.length?'amber':''}">${openTasks.length}</div><div class="sub">${overdue.length} overdue</div></div>
     <div class="stat"><div class="lbl">Days to Launch</div><div class="val accent">${dToLaunch>0?dToLaunch:0}</div><div class="sub">Challenge 001 · Sep 28</div></div>
     <div class="stat"><div class="lbl">Launch Plan</div><div class="val green">${mpct}%</div><div class="sub">${mdone}/${miles.length} milestones</div></div>
-    <div class="stat"><div class="lbl">Next Drop</div><div class="val" style="font-size:20px;line-height:1.2;margin-top:10px">${nextDrop?esc(nextDrop.name):'—'}</div><div class="sub">${nextDrop?fmtDate(nextDrop.date):'no drops scheduled'}</div></div>
+    <div class="stat"><div class="lbl">Next Drop</div><div class="val" style="font-size:20px;line-height:1.2;margin-top:10px">${nextDrop?esc(nextDrop.item):'—'}</div><div class="sub">${nextDropWhen}</div></div>
   </div>`;
 
   h+=`<div class="grid2">`;
