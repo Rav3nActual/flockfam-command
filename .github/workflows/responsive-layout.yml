@@ -1,0 +1,51 @@
+name: Make Command Center responsive
+
+on:
+  push:
+    paths:
+      - '.github/workflows/responsive-layout.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch responsive layout
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text()
+
+          replacements = [
+              (
+                  '.appbody{display:grid;grid-template-columns:232px 1fr;flex:1;min-height:0}',
+                  '.appbody{display:grid;grid-template-columns:232px minmax(0,1fr);flex:1;min-height:0}'
+              ),
+              (
+                  '.main{padding:26px 30px 60px;max-width:1180px;width:100%}',
+                  '.main{padding:clamp(18px,1.6vw,36px) clamp(16px,2vw,48px) 60px;max-width:none;width:100%;min-width:0}'
+              ),
+              (
+                  '.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}\n@media(max-width:900px){.grid2{grid-template-columns:1fr}}',
+                  '.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(520px,100%),1fr));gap:20px;align-items:start}'
+              ),
+          ]
+
+          for old, new in replacements:
+              if old not in s:
+                  raise SystemExit(f'Target not found: {old}')
+              s = s.replace(old, new, 1)
+
+          p.write_text(s)
+          PY
+      - name: Commit change
+        run: |
+          git config user.name "FlockFam Command Center"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html
+          git commit -m "Make Command Center layout responsive"
+          git push
