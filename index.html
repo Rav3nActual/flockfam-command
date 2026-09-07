@@ -240,7 +240,7 @@ table.grid td.spcell .ce{color:var(--accent)}
 <script>
 const SUPABASE_URL = "https://bwnwvbdzeqgxdmsrkand.supabase.co";
 const SUPABASE_KEY = "sb_publishable_XG4tDiLVLs3mwhKrj_kFRg_nmDrFSjk";
-const LAUNCH_DATE = "2026-09-28";
+const LAUNCH_DATE = "2026-10-09";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let DATA = {tasks:[],launch_milestones:[],products:[],drops:[],influencers:[],significant_dates:[],documents:[],drop_schedule:[],ideas:[],reaper_stages:[],reaper_items:[]};
@@ -364,7 +364,7 @@ function viewOverview(){
   let h=`<div class="page-head"><div><h1>Overview</h1><p>Everything FlockFam, at a glance — ${new Date().toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"})}</p></div></div>`;
   h+=`<div class="stat-grid">
     <div class="stat"><div class="lbl">Open Tasks</div><div class="val ${overdue.length?'amber':''}">${openTasks.length}</div><div class="sub">${overdue.length} overdue</div></div>
-    <div class="stat"><div class="lbl">Days to Launch</div><div class="val accent">${dToLaunch>0?dToLaunch:0}</div><div class="sub">Challenge 001 · Sep 28</div></div>
+    <div class="stat"><div class="lbl">Days to Launch</div><div class="val accent">${dToLaunch>0?dToLaunch:0}</div><div class="sub">Challenge 001 · Oct 9</div></div>
     <div class="stat"><div class="lbl">Launch Plan</div><div class="val green">${mpct}%</div><div class="sub">${mdone}/${miles.length} milestones</div></div>
     <div class="stat"><div class="lbl">Next Drop</div><div class="val" style="font-size:20px;line-height:1.2;margin-top:10px">${nextDrop?esc(nextDrop.item):'—'}</div><div class="sub">${nextDropWhen}</div></div>
   </div>`;
