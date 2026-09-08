@@ -84,6 +84,15 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .stat .val{font-size:30px;font-weight:800;margin-top:6px;letter-spacing:-.02em;line-height:1}
 .stat .sub{font-size:12.5px;color:var(--muted2);margin-top:6px}
 .stat .val.accent{color:var(--accent)} .stat .val.green{color:var(--green)} .stat .val.amber{color:var(--amber)} .stat .val.red{color:var(--red)}
+.store-pulse .panel-body{padding:16px 18px 18px}
+.store-pulse .stat-grid{margin-bottom:0}
+.store-pulse .pulse-stat{background:var(--bg2);min-width:0}
+.store-pulse .pulse-stat .val{font-size:26px}
+.store-pulse .pulse-stat .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pulse-meta{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-top:12px;margin-top:14px;border-top:1px solid var(--border);font-size:12.5px;color:var(--muted2)}
+.pulse-meta strong{color:var(--text);font-weight:700}
+.pulse-ready{display:flex;align-items:center;gap:7px}
+.pulse-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
 
 .panel{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:20px;overflow:hidden}
 .panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 18px;border-bottom:1px solid var(--border)}
@@ -243,7 +252,7 @@ const SUPABASE_KEY = "sb_publishable_XG4tDiLVLs3mwhKrj_kFRg_nmDrFSjk";
 const LAUNCH_DATE = "2026-10-09";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let DATA = {tasks:[],launch_milestones:[],products:[],drops:[],influencers:[],significant_dates:[],documents:[],drop_schedule:[],ideas:[],reaper_stages:[],reaper_items:[]};
+let DATA = {tasks:[],launch_milestones:[],products:[],drops:[],influencers:[],significant_dates:[],documents:[],drop_schedule:[],ideas:[],reaper_stages:[],reaper_items:[],store_metrics:[]};
 let VIEW = "overview";
 
 /* ---------- helpers ---------- */
@@ -257,6 +266,9 @@ function daysBetween(a,b){return Math.round((new Date(b)-new Date(a))/86400000);
 function isOverdue(d){return d && new Date(d+"T00:00:00") < today();}
 function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),1800);}
 function statusPill(s){const k=(s||"Not Started").toLowerCase().replace(/[^a-z]/g,"");return `<span class="pill st-${k}">${esc(s||"Not Started")}</span>`;}
+function fmtMetric(v){return v==null||v===""?"—":Number(v).toLocaleString();}
+function fmtMoney(v){return v==null||v===""?"—":Number(v).toLocaleString(undefined,{style:"currency",currency:"USD",maximumFractionDigits:0});}
+function fmtPct(v){return v==null||v===""?"—":`${Number(v).toFixed(1)}%`;}
 
 /* ---------- auth ---------- */
 async function initAuth(){
@@ -361,6 +373,9 @@ function viewOverview(){
   const upDates=DATA.significant_dates.map(d=>({...d,occ:nextOccurrence(d.event_date)})).filter(d=>d.occ)
       .sort((a,b)=>a.occ-b.occ).slice(0,5);
 
+  const metric=[...(DATA.store_metrics||[])].sort((a,b)=>new Date(b.captured_at||0)-new Date(a.captured_at||0))[0]||null;
+  const pulseUpdated=metric&&metric.captured_at?new Date(metric.captured_at).toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):"Awaiting live data";
+
   let h=`<div class="page-head"><div><h1>Overview</h1><p>Everything FlockFam, at a glance — ${new Date().toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"})}</p></div></div>`;
   h+=`<div class="stat-grid">
     <div class="stat"><div class="lbl">Open Tasks</div><div class="val ${overdue.length?'amber':''}">${openTasks.length}</div><div class="sub">${overdue.length} overdue</div></div>
@@ -368,6 +383,22 @@ function viewOverview(){
     <div class="stat"><div class="lbl">Launch Plan</div><div class="val green">${mpct}%</div><div class="sub">${mdone}/${miles.length} milestones</div></div>
     <div class="stat"><div class="lbl">Next Drop</div><div class="val" style="font-size:20px;line-height:1.2;margin-top:10px">${nextDrop?esc(nextDrop.item):'—'}</div><div class="sub">${nextDropWhen}</div></div>
   </div>`;
+
+  h+=`<div class="panel store-pulse"><div class="panel-head"><h2>Store Pulse</h2><span class="count">${pulseUpdated}</span></div><div class="panel-body">
+    <div class="stat-grid">
+      <div class="stat pulse-stat"><div class="lbl">Visitors Today</div><div class="val accent">${fmtMetric(metric?.visitors_today)}</div><div class="sub">GA4 · today</div></div>
+      <div class="stat pulse-stat"><div class="lbl">Visitors 7 Days</div><div class="val">${fmtMetric(metric?.visitors_7d)}</div><div class="sub">GA4 · rolling 7d</div></div>
+      <div class="stat pulse-stat"><div class="lbl">Visitors 30 Days</div><div class="val">${fmtMetric(metric?.visitors_30d)}</div><div class="sub">GA4 · rolling 30d</div></div>
+      <div class="stat pulse-stat"><div class="lbl">Sales Today</div><div class="val green">${fmtMoney(metric?.sales_today)}</div><div class="sub">Shopify · today</div></div>
+      <div class="stat pulse-stat"><div class="lbl">Sales 7 Days</div><div class="val green">${fmtMoney(metric?.sales_7d)}</div><div class="sub">Shopify · rolling 7d</div></div>
+      <div class="stat pulse-stat"><div class="lbl">Sales MTD</div><div class="val green">${fmtMoney(metric?.sales_mtd)}</div><div class="sub">Shopify · month to date</div></div>
+    </div>
+    <div class="pulse-meta">
+      <span><strong>${fmtMetric(metric?.orders_today)}</strong> orders today</span>
+      <span><strong>${fmtPct(metric?.conversion_rate)}</strong> conversion</span>
+      <span class="pulse-ready"><i class="pulse-dot"></i>${metric?`Source: ${esc(metric.source||"sync")}`:"GA4 + Shopify feed ready to connect"}</span>
+    </div>
+  </div></div>`;
 
   h+=`<div class="grid2">`;
   // overdue / open tasks
