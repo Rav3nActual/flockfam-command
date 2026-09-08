@@ -1,3 +1,4 @@
+# Store Pulse patch workflow
 name: Apply Store Pulse
 
 on:
