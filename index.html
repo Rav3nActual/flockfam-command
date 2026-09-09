@@ -199,6 +199,7 @@ table.grid td.spcell .ce{color:var(--accent)}
 .mobtop img{height:22px}
 .mobtop .mtitle{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 </style>
+<link rel="stylesheet" href="crm.css?v=20260909-1">
 </head>
 <body>
 
@@ -226,7 +227,7 @@ table.grid td.spcell .ce{color:var(--accent)}
       <button data-view="launch"><span class="ic">★</span> Launch Plan</button>
       <button data-view="reaper"><span class="ic">🪶</span> Reaper Rav3n</button>
       <button data-view="drops"><span class="ic">▲</span> Drop Schedule</button>
-      <button data-view="growth"><span class="ic">◎</span> Growth</button>
+      <button data-view="crm"><span class="ic">◎</span> CRM</button>
       <button data-view="ideas"><span class="ic">✦</span> Ideas</button>
       <button data-view="docs"><span class="ic">▤</span> Docs</button>
     </nav>
@@ -254,7 +255,8 @@ const SUPABASE_KEY = "sb_publishable_XG4tDiLVLs3mwhKrj_kFRg_nmDrFSjk";
 const LAUNCH_DATE = "2026-10-09";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let DATA = {tasks:[],launch_milestones:[],products:[],drops:[],influencers:[],significant_dates:[],documents:[],drop_schedule:[],ideas:[],reaper_stages:[],reaper_items:[],store_metrics:[]};
+let DATA = {tasks:[],launch_milestones:[],products:[],drops:[],influencers:[],significant_dates:[],documents:[],drop_schedule:[],ideas:[],reaper_stages:[],reaper_items:[],store_metrics:[],crm_activities:[],crm_commitments:[]};
+let DATA_ERRORS = {};
 let VIEW = "overview";
 
 /* ---------- helpers ---------- */
@@ -303,9 +305,9 @@ $("#signOut").onclick=async()=>{await sb.auth.signOut();};
 /* ---------- data ---------- */
 async function loadAll(){
   const tables=Object.keys(DATA);
-  const res=await Promise.all(tables.map(t=>sb.from(t).select("*").then(r=>r).catch(e=>({error:e,data:[]}))));
+  const res=await Promise.all(tables.map(t=>(CRM_TABLES.includes(t)?crmLoadTable(t):sb.from(t).select("*")).then(r=>r).catch(e=>({error:e,data:[]}))));
   const errs=[];
-  tables.forEach((t,i)=>{ if(res[i].error){errs.push(t+": "+(res[i].error.message||res[i].error));} DATA[t]=res[i].data||[]; });
+  tables.forEach((t,i)=>{ if(res[i].error){DATA_ERRORS[t]=res[i].error;errs.push(t+": "+(res[i].error.message||res[i].error));}else{delete DATA_ERRORS[t];DATA[t]=res[i].data||[];} });
   if(errs.length) console.warn("FF load issues:",errs);
   // client sort
   DATA.tasks.sort((a,b)=>(a.sort_order-b.sort_order));
@@ -344,10 +346,12 @@ function render(){
   else if(VIEW==="launch")c.innerHTML=viewLaunch();
   else if(VIEW==="reaper")c.innerHTML=viewReaper();
   else if(VIEW==="drops")c.innerHTML=viewDrops();
-  else if(VIEW==="growth")c.innerHTML=viewGrowth();
+  else if(VIEW==="crm")c.innerHTML=viewCRM();
+  else if(VIEW==="dates")c.innerHTML=viewDates();
   else if(VIEW==="ideas")c.innerHTML=viewIdeas();
   else if(VIEW==="docs")c.innerHTML=viewDocs();
   bindActions();
+  bindCRM();
 }
 
 /* ===== OVERVIEW ===== */
@@ -412,13 +416,15 @@ function viewOverview(){
   else h+=`<div class="empty">Nothing open. 🎯</div>`;
   h+=`</div></div>`;
   // upcoming dates
-  h+=`<div class="panel"><div class="panel-head"><h2>Upcoming Dates</h2><button class="btn sm" data-add="significant_dates">+ Date</button></div><div class="panel-body">`;
+  h+=`<div class="panel"><div class="panel-head"><h2>Upcoming Dates</h2><div class="crm-actions"><button class="btn ghost sm" data-manage-dates>Manage</button><button class="btn sm" data-add="significant_dates">+ Date</button></div></div><div class="panel-body">`;
   if(upDates.length){h+=`<table class="tbl"><tbody>`;
     upDates.forEach(d=>{const dd=daysBetween(today(),d.occ);h+=`<tr class="row"><td class="title-cell">${esc(d.name)}</td><td class="right muted2">${d.occ.toLocaleDateString(undefined,{month:"short",day:"numeric"})} · ${dd}d</td></tr>`;});
     h+=`</tbody></table>`;}
   else h+=`<div class="empty">No dates yet.</div>`;
   h+=`</div></div>`;
   h+=`</div>`;
+
+  h+=crmOverview();
 
   // launch progress by phase
   const phases=[...new Set(miles.map(m=>m.phase))];
@@ -471,33 +477,6 @@ function viewLaunch(){
 function viewDrops(){
   let h=`<div class="page-head"><div><h1>Drop Schedule</h1><p>2026 drop schedule — patches, apparel, misc &amp; special projects by week.</p></div></div>`;
   h+=dropGrid();
-  return h;
-}
-
-/* ===== GROWTH ===== */
-function viewGrowth(){
-  const inf=DATA.influencers;
-  let h=`<div class="page-head"><div><h1>Growth &amp; Outreach</h1><p>Influencer pipeline and partnerships.</p></div></div>`;
-  h+=`<div class="panel"><div class="panel-head"><h2>Influencer Pipeline <span class="count">${inf.length}</span></h2><button class="btn sm" data-add="influencers">+ Contact</button></div><div class="panel-body">`;
-  if(inf.length){
-    h+=`<table class="tbl"><thead><tr><th>Name</th><th>Platform</th><th>Link</th><th>Status</th><th>Contacted</th><th></th></tr></thead><tbody>`;
-    inf.forEach(x=>{h+=`<tr class="row"><td class="title-cell">${esc(x.person_name)}</td>
-      <td>${(x.platform||[]).map(p=>`<span class="tag">${esc(p)}</span>`).join('')}</td>
-      <td>${x.page_link?`<a href="${esc(x.page_link)}" target="_blank" rel="noopener">open ↗</a>`:'<span class="muted2">—</span>'}</td>
-      <td>${statusSelect("influencers",x.id,x.status,["","Pitched","Contacted","Interview Prep","Waiting","Reviewing","Published"])}</td>
-      <td class="muted2">${x.date_contacted?fmtShort(x.date_contacted):'—'}</td>
-      <td><div class="rowacts">${editDel("influencers",x.id)}</div></td></tr>`;});
-    h+=`</tbody></table>`;
-  } else h+=`<div class="empty">No contacts yet.</div>`;
-  h+=`</div></div>`;
-  const dts=DATA.significant_dates.slice().sort((a,b)=>((a.event_date||"")<(b.event_date||"")?-1:1));
-  h+=`<div class="panel"><div class="panel-head"><h2>Significant Dates <span class="count">${dts.length}</span></h2><button class="btn sm" data-add="significant_dates">+ Date</button></div><div class="panel-body">`;
-  if(dts.length){
-    h+=`<table class="tbl"><thead><tr><th>Name</th><th>Date</th><th>Tags</th><th></th></tr></thead><tbody>`;
-    dts.forEach(d=>{h+=`<tr class="row"><td class="title-cell">${esc(d.name)}</td><td class="muted2">${d.event_date?fmtDate(d.event_date):'—'}</td><td>${(d.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</td><td><div class="rowacts">${editDel("significant_dates",d.id)}</div></td></tr>`;});
-    h+=`</tbody></table>`;
-  } else h+=`<div class="empty">No dates yet.</div>`;
-  h+=`</div></div>`;
   return h;
 }
 
@@ -651,13 +630,6 @@ const FORMS={
     {k:"drop_date",l:"Drop date",t:"date"},
     {k:"status",l:"Status",t:"text"},
     {k:"notes",l:"Notes",t:"textarea"}]},
-  influencers:{title:"Contact",fields:[
-    {k:"person_name",l:"Name",t:"text",req:1},
-    {k:"platform",l:"Platform (comma-separated)",t:"text"},
-    {k:"page_link",l:"Link",t:"text"},
-    {k:"status",l:"Status",t:"select",opts:["","Pitched","Contacted","Interview Prep","Waiting","Reviewing","Published"]},
-    {k:"date_contacted",l:"Date contacted",t:"date"},
-    {k:"notes",l:"Notes",t:"textarea"}]},
   significant_dates:{title:"Date",fields:[
     {k:"name",l:"Name",t:"text",req:1},
     {k:"event_date",l:"Date",t:"date"},
@@ -716,7 +688,8 @@ function openModal(table,row,preset){
   };
 }
 
-initAuth();
 </script>
+<script src="crm.js?v=20260909-1"></script>
+<script>initAuth();</script>
 </body>
 </html>

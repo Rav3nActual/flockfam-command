@@ -1,0 +1,90 @@
+/* Relationships use the Command Center's existing colors, fonts and controls. */
+.crm-actions,.crm-tags,.crm-tabs{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.crm-actions .btn{white-space:nowrap}
+.crm-stats{grid-template-columns:repeat(4,minmax(0,1fr))}
+.crm-stats .stat .sub{color:var(--muted)}
+.crm-tabs{gap:5px;margin-bottom:18px}
+.crm-tab{border:1px solid var(--border);background:var(--panel);color:var(--muted);padding:9px 13px;border-radius:9px;font-size:13px;font-weight:600}
+.crm-tab[aria-pressed="true"]{color:var(--accent);border-color:var(--accent);background:var(--accent-soft)}
+.crm-tab span{margin-left:7px;font-size:11px;opacity:.8}
+.crm-toolbar{display:flex;gap:10px;align-items:end;margin-bottom:18px;flex-wrap:wrap}
+.crm-toolbar .field{margin:0;flex:1;min-width:180px}
+.crm-toolbar .field:last-child{flex:0 1 230px}
+.crm-count{color:var(--muted);font-size:12px;margin:0 0 12px}
+.crm-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(285px,100%),1fr));gap:14px}
+.crm-contact-card{display:flex;flex-direction:column;gap:17px;min-width:0;text-align:left;padding:20px;background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:var(--radius);transition:border-color .15s,background .15s;font:inherit}
+.crm-contact-card:hover{background:var(--panel2);border-color:var(--border2)}
+.crm-card-top{display:flex;gap:12px;align-items:center;min-width:0}
+.crm-avatar{display:flex;align-items:center;justify-content:center;width:42px;height:42px;flex:none;background:var(--accent-soft);color:var(--accent);border:1px solid rgba(232,98,42,.22);border-radius:12px;font-size:15px;font-weight:800}
+.crm-card-name{font-weight:700;font-size:16px;overflow-wrap:anywhere}
+.crm-card-sub{display:block;font-size:12px;color:var(--muted);margin-top:2px;overflow-wrap:anywhere}
+.crm-tags{gap:6px}
+.crm-tags .tag{margin:0}
+.crm-status{display:inline-block;font-size:11.5px;font-weight:600;border:1px solid var(--border2);border-radius:99px;padding:2px 9px;color:var(--muted);background:var(--bg2)}
+.crm-status.active,.crm-status.complete{color:var(--green);background:var(--green-soft);border-color:transparent}
+.crm-status.contacted,.crm-status.in-conversation,.crm-status.in-progress{color:var(--blue);background:var(--blue-soft);border-color:transparent}
+.crm-status.waiting,.crm-status.pitched{color:var(--amber)}
+.crm-card-next{display:flex;flex-direction:column;gap:4px;border-top:1px solid var(--border);padding-top:13px;margin-top:auto;font-size:12.5px;color:var(--muted);overflow-wrap:anywhere}
+.crm-card-next strong{font-weight:500;color:var(--text)}
+.crm-back{margin-bottom:16px}
+.crm-detail-grid{display:grid;grid-template-columns:minmax(270px,.8fr) minmax(350px,1.3fr);gap:20px;align-items:start}
+.crm-detail-grid>div{min-width:0}
+.crm-profile{padding:22px}
+.crm-profile h2{font-size:23px;margin:0 0 10px;overflow-wrap:anywhere}
+.crm-contact-info{display:grid;grid-template-columns:100px minmax(0,1fr);gap:9px 12px;margin:22px 0;font-size:13px}
+.crm-contact-info dt{color:var(--muted)}
+.crm-contact-info dd{margin:0;overflow-wrap:anywhere}
+.crm-copy{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;color:var(--text);margin:8px 0 0;line-height:1.65}
+.crm-section-label{font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.07em;text-transform:uppercase}
+.crm-next{border-top:1px solid var(--border);padding:20px 22px;background:var(--bg2)}
+.crm-next-date{display:block;margin:8px 0 0;font-size:13px;color:var(--muted)}
+.crm-next .crm-actions{margin-top:15px}
+.crm-entry{padding:17px 20px;border-bottom:1px solid var(--border)}
+.crm-entry:last-child{border-bottom:0}
+.crm-entry-top{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:12px}
+.crm-entry h3{margin:9px 0 6px;font-size:14px;overflow-wrap:anywhere}
+.crm-entry .crm-actions{margin-top:11px}
+.crm-entry .iconbtn{min-height:30px}
+.crm-empty{padding:36px 20px;color:var(--muted);text-align:center}
+.crm-empty strong{display:block;color:var(--text);margin-bottom:6px;font-size:15px}
+.crm-empty p{margin:0 auto 16px;max-width:380px;font-size:13px}
+.crm-error{padding:16px 18px;background:var(--red-soft);border:1px solid var(--red);border-radius:12px;color:var(--text);margin-bottom:20px}
+.crm-error p{margin:0 0 12px}
+.crm-due-row{display:flex;align-items:center;justify-content:space-between;gap:15px;width:100%;border:0;border-bottom:1px solid var(--border);padding:12px 18px;background:transparent;color:var(--text);text-align:left;font:inherit}
+.crm-due-row:last-child{border-bottom:0}
+.crm-due-row:hover{background:var(--panel2)}
+.crm-due-row strong{display:block;font-size:13px;overflow-wrap:anywhere}
+.crm-due-row small{display:block;color:var(--muted);margin-top:2px;overflow-wrap:anywhere}
+.crm-due-row time{font-size:12px;color:var(--muted);flex:none}
+.crm-modal{max-width:640px}
+.crm-modal .modal-head{gap:12px}
+.crm-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+.crm-field-wide{grid-column:1/-1}
+.crm-form-error{color:var(--red);white-space:pre-wrap;font-size:13px;margin:0 0 12px;overflow-wrap:anywhere}
+.crm-form-help{color:var(--muted);font-size:12px;margin:6px 0 0}
+.crm-form-footnote{font-size:12px;color:var(--muted);margin:0 0 15px}
+.crm-footer-delete{margin-top:18px;display:flex;justify-content:flex-end}
+.crm-dates-list .rowacts{opacity:1}
+.crm-dates-list .tbl td{white-space:normal}
+.crm-dates-list{overflow-x:auto}
+.crm-modal :is(input,select,textarea){color-scheme:dark}
+.crm-modal button:disabled,.crm-root button:disabled{cursor:wait;opacity:.55}
+.crm-root :is(button,input,select,textarea,a):focus-visible,.crm-modal :is(button,input,select,textarea,a):focus-visible,.crm-due-row:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+@media(max-width:1100px){.crm-detail-grid{grid-template-columns:1fr}.crm-detail-grid .panel{margin-bottom:16px}}
+@media(max-width:600px){
+  .crm-stats{grid-template-columns:1fr 1fr;gap:10px}
+  .crm-stats .stat{padding:14px}
+  .crm-stats .stat .lbl{font-size:10px}
+  .crm-stats .stat .val{font-size:25px}
+  .crm-tab{padding:9px 10px;font-size:12px}
+  .crm-toolbar .field:last-child{flex:1}
+  .crm-form-grid{grid-template-columns:1fr}
+  .crm-form-grid :is(input,select,textarea){font-size:16px}
+  #modal:has(.crm-modal){padding:12px}
+  .crm-modal{max-height:calc(100dvh - 24px)}
+  .crm-modal .modal-body{padding:16px}
+  .crm-profile{padding:18px}
+  .crm-contact-info{grid-template-columns:85px minmax(0,1fr)}
+  .crm-root .panel-head{flex-wrap:wrap}
+  .crm-root .iconbtn{min-height:36px}
+}
