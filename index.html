@@ -200,6 +200,7 @@ table.grid td.spcell .ce{color:var(--accent)}
 .mobtop .mtitle{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 </style>
 <link rel="stylesheet" href="crm.css?v=20260909-1">
+<link rel="stylesheet" href="payables.css?v=20260910-1">
 </head>
 <body>
 
@@ -227,6 +228,7 @@ table.grid td.spcell .ce{color:var(--accent)}
       <button data-view="launch"><span class="ic">★</span> Launch Plan</button>
       <button data-view="reaper"><span class="ic">🪶</span> Reaper Rav3n</button>
       <button data-view="drops"><span class="ic">▲</span> Drop Schedule</button>
+      <button data-view="payables"><span class="ic">＄</span> Payables</button>
       <button data-view="crm"><span class="ic">◎</span> CRM</button>
       <button data-view="ideas"><span class="ic">✦</span> Ideas</button>
       <button data-view="docs"><span class="ic">▤</span> Docs</button>
@@ -255,7 +257,7 @@ const SUPABASE_KEY = "sb_publishable_XG4tDiLVLs3mwhKrj_kFRg_nmDrFSjk";
 const LAUNCH_DATE = "2026-10-09";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let DATA = {tasks:[],launch_milestones:[],products:[],drops:[],influencers:[],significant_dates:[],documents:[],drop_schedule:[],ideas:[],reaper_stages:[],reaper_items:[],store_metrics:[],crm_activities:[],crm_commitments:[]};
+let DATA = {tasks:[],launch_milestones:[],products:[],drops:[],influencers:[],significant_dates:[],documents:[],drop_schedule:[],ideas:[],reaper_stages:[],reaper_items:[],store_metrics:[],crm_activities:[],crm_commitments:[],payables:[],payable_payments:[]};
 let DATA_ERRORS = {};
 let VIEW = "overview";
 
@@ -305,7 +307,7 @@ $("#signOut").onclick=async()=>{await sb.auth.signOut();};
 /* ---------- data ---------- */
 async function loadAll(){
   const tables=Object.keys(DATA);
-  const res=await Promise.all(tables.map(t=>(CRM_TABLES.includes(t)?crmLoadTable(t):sb.from(t).select("*")).then(r=>r).catch(e=>({error:e,data:[]}))));
+  const res=await Promise.all(tables.map(t=>(t==="store_metrics"?loadStorePulse():[...CRM_TABLES,...PAYABLE_TABLES].includes(t)?crmLoadTable(t):sb.from(t).select("*")).then(r=>r).catch(e=>({error:e,data:[]}))));
   const errs=[];
   tables.forEach((t,i)=>{ if(res[i].error){DATA_ERRORS[t]=res[i].error;errs.push(t+": "+(res[i].error.message||res[i].error));}else{delete DATA_ERRORS[t];DATA[t]=res[i].data||[];} });
   if(errs.length) console.warn("FF load issues:",errs);
@@ -346,12 +348,15 @@ function render(){
   else if(VIEW==="launch")c.innerHTML=viewLaunch();
   else if(VIEW==="reaper")c.innerHTML=viewReaper();
   else if(VIEW==="drops")c.innerHTML=viewDrops();
+  else if(VIEW==="payables")c.innerHTML=viewPayables();
   else if(VIEW==="crm")c.innerHTML=viewCRM();
   else if(VIEW==="dates")c.innerHTML=viewDates();
   else if(VIEW==="ideas")c.innerHTML=viewIdeas();
   else if(VIEW==="docs")c.innerHTML=viewDocs();
   bindActions();
   bindCRM();
+  bindPayables();
+  bindStorePulse();
 }
 
 /* ===== OVERVIEW ===== */
@@ -379,7 +384,7 @@ function viewOverview(){
   const upDates=DATA.significant_dates.map(d=>({...d,occ:nextOccurrence(d.event_date)})).filter(d=>d.occ)
       .sort((a,b)=>a.occ-b.occ).slice(0,5);
 
-  const metric=[...(DATA.store_metrics||[])].sort((a,b)=>new Date(b.captured_at||0)-new Date(a.captured_at||0))[0]||null;
+  const metric=DATA_ERRORS.store_metrics?null:[...(DATA.store_metrics||[])].sort((a,b)=>new Date(b.captured_at||0)-new Date(a.captured_at||0))[0]||null;
   const pulseUpdated=metric&&metric.captured_at?new Date(metric.captured_at).toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):"Awaiting live data";
 
   let h=`<div class="page-head"><div><h1>Overview</h1><p>Everything FlockFam, at a glance — ${new Date().toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"})}</p></div></div>`;
@@ -390,21 +395,7 @@ function viewOverview(){
     <div class="stat"><div class="lbl">Next Drop</div><div class="val" style="font-size:20px;line-height:1.2;margin-top:10px">${nextDrop?esc(nextDrop.item):'—'}</div><div class="sub">${nextDropWhen}</div></div>
   </div>`;
 
-  h+=`<div class="panel store-pulse"><div class="panel-head"><h2>Store Pulse</h2><span class="count">${pulseUpdated}</span></div><div class="panel-body">
-    <div class="stat-grid">
-      <div class="stat pulse-stat"><div class="lbl">Visitors Today</div><div class="val accent">${fmtMetric(metric?.visitors_today)}</div><div class="sub">GA4 · today</div></div>
-      <div class="stat pulse-stat"><div class="lbl">Visitors 7 Days</div><div class="val">${fmtMetric(metric?.visitors_7d)}</div><div class="sub">GA4 · rolling 7d</div></div>
-      <div class="stat pulse-stat"><div class="lbl">Visitors 30 Days</div><div class="val">${fmtMetric(metric?.visitors_30d)}</div><div class="sub">GA4 · rolling 30d</div></div>
-      <div class="stat pulse-stat"><div class="lbl">Sales Today</div><div class="val green">${fmtMoney(metric?.sales_today)}</div><div class="sub">Shopify · today</div></div>
-      <div class="stat pulse-stat"><div class="lbl">Sales 7 Days</div><div class="val green">${fmtMoney(metric?.sales_7d)}</div><div class="sub">Shopify · rolling 7d</div></div>
-      <div class="stat pulse-stat"><div class="lbl">Sales MTD</div><div class="val green">${fmtMoney(metric?.sales_mtd)}</div><div class="sub">Shopify · month to date</div></div>
-    </div>
-    <div class="pulse-meta">
-      <span><strong>${fmtMetric(metric?.orders_today)}</strong> orders today</span>
-      <span><strong>${fmtPct(metric?.conversion_rate)}</strong> conversion</span>
-      <span class="pulse-ready"><i class="pulse-dot"></i>${metric?`Source: ${esc(metric.source||"sync")}`:"GA4 + Shopify feed ready to connect"}</span>
-    </div>
-  </div></div>`;
+  h+=viewStorePulse();
 
   h+=`<div class="grid2">`;
   // overdue / open tasks
@@ -424,6 +415,7 @@ function viewOverview(){
   h+=`</div></div>`;
   h+=`</div>`;
 
+  h+=payablesOverview();
   h+=crmOverview();
 
   // launch progress by phase
@@ -690,6 +682,8 @@ function openModal(table,row,preset){
 
 </script>
 <script src="crm.js?v=20260909-1"></script>
+<script src="payables.js?v=20260910-1"></script>
+<script src="store-pulse.js?v=20260910-1"></script>
 <script>initAuth();</script>
 </body>
 </html>

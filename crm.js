@@ -161,9 +161,9 @@ function crmDialog({title,fields=[],values={},submitLabel="Save",intro="",onSave
     if(Array.isArray(value))value=value.join(", ");
     const attrs=`id="crmField-${f.key}" name="${f.key}" ${f.required?"required":""} ${f.maxLength?`maxlength="${f.maxLength}"`:""}`;
     body+=`<div class="field ${f.wide?"crm-field-wide":""}"><label for="crmField-${f.key}">${esc(f.label)}${f.required?" *":""}</label>`;
-    if(f.type==="select")body+=`<select ${attrs}>${f.options.map(o=>`<option value="${esc(o)}" ${o===value?"selected":""}>${esc(o)}</option>`).join("")}</select>`;
+    if(f.type==="select")body+=`<select ${attrs}>${f.options.map(o=>{const v=typeof o==="object"?o.value:o,l=typeof o==="object"?o.label:o;return `<option value="${esc(v)}" ${v===value?"selected":""}>${esc(l)}</option>`;}).join("")}</select>`;
     else if(f.type==="textarea")body+=`<textarea ${attrs} rows="4">${esc(value)}</textarea>`;
-    else body+=`<input ${attrs} type="${f.type||"text"}" value="${esc(value)}" ${f.type==="number"?'min="0" max="9999999999.99" step="0.01"':""} ${f.placeholder?`placeholder="${esc(f.placeholder)}"`:""}>`;
+    else body+=`<input ${attrs} type="${f.type||"text"}" value="${esc(value)}" ${f.type==="number"?`min="${f.min??0}" max="${f.max??9999999999.99}" step="0.01"`:""} ${f.placeholder?`placeholder="${esc(f.placeholder)}"`:""}>`;
     if(f.help)body+=`<p class="crm-form-help">${esc(f.help)}</p>`;
     body+="</div>";
   });

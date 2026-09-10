@@ -1,0 +1,56 @@
+.payables-root{font-size:14px}
+.payables-root .page-head p{font-size:14px}
+.payables-stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+.payables-stats .val{font-variant-numeric:tabular-nums;font-size:27px;overflow-wrap:anywhere}
+.payables-toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:18px}
+.payables-toolbar label{color:var(--muted)}
+.payables-toolbar select{padding:9px 12px;font-size:14px}
+.payables-table-wrap{overflow-x:auto}
+.payables-table th,.payables-table td{padding:14px 18px}
+.payables-table th{font-size:12px}
+.payables-table .money{font-variant-numeric:tabular-nums;white-space:nowrap}
+.payables-name{font-size:16px;font-weight:700;background:transparent;border:0;padding:0;color:var(--accent);text-align:left;overflow-wrap:anywhere}
+.payables-purpose{font-size:14px;color:var(--muted);margin-top:4px;overflow-wrap:anywhere}
+.payables-status{font-size:13px}
+.payables-detail{display:grid;grid-template-columns:minmax(270px,1fr) minmax(330px,1.2fr);gap:20px;align-items:start}
+.payables-detail>div{min-width:0}
+.payables-balance{font-size:36px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;margin:6px 0 12px}
+.payables-balance.paid{color:var(--green)}
+.payables-numbers{display:flex;gap:25px;flex-wrap:wrap;margin:15px 0 20px}
+.payables-numbers span{display:block;color:var(--muted);font-size:13px}
+.payables-numbers strong{font-size:16px;font-variant-numeric:tabular-nums}
+.payables-details{display:grid;grid-template-columns:100px minmax(0,1fr);gap:12px;font-size:14px}
+.payables-details dt{color:var(--muted)}
+.payables-details dd{margin:0;overflow-wrap:anywhere;white-space:pre-wrap}
+.payables-detail .crm-copy{font-size:14px}
+.payables-payment{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.payables-payment strong{font-size:18px;font-variant-numeric:tabular-nums}
+.payables-payment time{font-size:14px;color:var(--muted)}
+.payables-overview{padding:18px;display:grid;grid-template-columns:minmax(140px,.7fr) minmax(0,1fr);gap:18px;align-items:start}
+.payables-overview .payables-balance{font-size:30px;margin-top:2px}
+.payables-overview p{margin:4px 0;color:var(--muted);font-size:14px}
+.payables-overview .crm-due-row{padding:9px 0;font-size:14px}
+.payables-overview .crm-due-row strong,.payables-overview .crm-due-row time{font-size:14px}
+.payables-overview .crm-due-row small{font-size:13px}
+.payables-root :is(button,a,select):focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.pulse-freshness{color:var(--muted);font-size:12px}
+.pulse-stale{color:var(--amber)}
+.pulse-explanation{margin-top:12px;font-size:13px;color:var(--muted)}
+.pulse-error{color:var(--red)}
+@media(max-width:1050px){.payables-detail{grid-template-columns:1fr}}
+@media(max-width:600px){
+ .payables-stats{grid-template-columns:1fr;gap:10px}
+ .payables-stats .stat{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center}
+ .payables-stats .val{font-size:24px;margin:0}
+ .payables-stats .sub{grid-column:1/-1}
+ .payables-overview{grid-template-columns:1fr}
+ .payables-table thead{display:none}
+ .payables-table,.payables-table tbody,.payables-table tr,.payables-table td{display:block;width:100%}
+ .payables-table tr{padding:15px;border-bottom:1px solid var(--border)}
+ .payables-table tr:last-child{border-bottom:0}
+ .payables-table td{padding:5px 0;border:0}
+ .payables-table td[data-label]{display:flex;align-items:center;justify-content:space-between;gap:10px}
+ .payables-table td[data-label]::before{content:attr(data-label);color:var(--muted);font-size:14px}
+ .payables-detail .panel-head{flex-wrap:wrap}
+ .payables-root .iconbtn{min-height:36px}
+}
