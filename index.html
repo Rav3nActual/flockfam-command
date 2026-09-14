@@ -228,6 +228,7 @@ table.grid td.spcell .ce{color:var(--accent)}
       <button data-view="todo"><span class="ic">✓</span> To-Do</button>
       <button data-view="launch"><span class="ic">★</span> Launch Plan</button>
       <button data-view="growth-pilot"><span class="ic">↗</span> Growth Pilot</button>
+      <button data-view="ai-ops"><span class="ic">⚙</span> AI Operations</button>
       <button data-view="reaper"><span class="ic">🪶</span> Reaper Rav3n</button>
       <button data-view="drops"><span class="ic">▲</span> Drop Schedule</button>
       <button data-view="payables"><span class="ic">＄</span> Payables</button>
@@ -349,6 +350,7 @@ function render(){
   else if(VIEW==="todo")c.innerHTML=viewTodo();
   else if(VIEW==="launch")c.innerHTML=viewLaunch();
   else if(VIEW==="growth-pilot")c.innerHTML=viewGrowthPilot();
+  else if(VIEW==="ai-ops")c.innerHTML=viewAIOps();
   else if(VIEW==="reaper")c.innerHTML=viewReaper();
   else if(VIEW==="drops")c.innerHTML=viewDrops();
   else if(VIEW==="payables")c.innerHTML=viewPayables();
@@ -689,6 +691,7 @@ function openModal(table,row,preset){
 <script src="payables.js?v=20260910-1"></script>
 <script src="store-pulse.js?v=20260910-1"></script>
 <script src="growth-pilot.js?v=20260914-1"></script>
+<script src="ai-ops.js?v=20260914-1"></script>
 <script>initAuth();</script>
 </body>
 </html>
