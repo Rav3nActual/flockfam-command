@@ -151,22 +151,58 @@ const PILOT_TERMS=[
   ["Brand codes","Repeatable identity cues that make FlockFam recognizable—such as the raven, orange, typography, Get Outdoors, patch heritage, and visual system. Campaign ideas may change; the recognizable system stays coherent."]
 ];
 
-function pilotStageCard(s,index){
+const PILOT_PROGRESS_KEY="ff-growth-pilot-progress-v1";
+function pilotProgressState(){
+  try{return JSON.parse(localStorage.getItem(PILOT_PROGRESS_KEY)||"{}");}catch{return {};}
+}
+function pilotProgressTotals(state=pilotProgressState()){
+  const total=PILOT_STAGES.reduce((n,s)=>n+s.deliverables.length,0);
+  const done=PILOT_STAGES.reduce((n,s,si)=>n+s.deliverables.filter((_,di)=>state[`${si}:${di}`]).length,0);
+  return {done,total,pct:total?Math.round(done/total*100):0};
+}
+function pilotStageProgress(si,state=pilotProgressState()){
+  const total=PILOT_STAGES[si].deliverables.length;
+  const done=PILOT_STAGES[si].deliverables.filter((_,di)=>state[`${si}:${di}`]).length;
+  return {done,total,pct:total?Math.round(done/total*100):0};
+}
+function pilotStageState(si,state=pilotProgressState()){
+  const p=pilotStageProgress(si,state);
+  if(p.done===p.total)return "Complete";
+  if(p.done)return "In progress";
+  if(si===0||pilotStageProgress(si-1,state).done===PILOT_STAGES[si-1].deliverables.length)return "Ready";
+  return "Waiting on prior gate";
+}
+
+function pilotStageCard(s,index,mode="pilot"){
+  const track=mode==="pilot",state=track?pilotProgressState():{},progress=track?pilotStageProgress(index,state):null,stageState=track?pilotStageState(index,state):"";
   const costs=s.costs?`<div class="pilot-mini-card"><h3>Budget plan</h3>${s.costs.map(c=>`<div class="pilot-cost-row"><span>${c[0]}</span><strong>${c[1]}</strong></div>`).join("")}</div>`:"";
   return `<details class="pilot-stage" ${index===0?"open":""}>
-    <summary><span class="pilot-stage-no">${s.no}</span><span class="pilot-stage-title"><strong>${s.title}</strong><span>${s.timing}</span></span><span class="pilot-stage-meta"><strong>${s.budget}</strong><span>${s.budgetLabel}</span></span><span class="pilot-chevron">+</span></summary>
+    <summary><span class="pilot-stage-no">${s.no}</span><span class="pilot-stage-title"><strong>${s.title}</strong><span>${s.timing}</span></span><span class="pilot-stage-meta"><strong>${s.budget}</strong><span>${s.budgetLabel}</span>${track?`<span class="pilot-stage-progress" data-pilot-stage-progress="${index}">${progress.done}/${progress.total} done · ${stageState}</span>`:""}</span><span class="pilot-chevron">+</span></summary>
     <div class="pilot-stage-body"><div class="pilot-plain"><div class="pilot-label">Plain-English version</div><p>${s.plain}</p></div>
       <div class="pilot-columns"><div><div class="pilot-section-title">Exactly what to do</div><ol class="pilot-actions">${s.actions.map(a=>`<li>${a}</li>`).join("")}</ol></div>
-      <aside>${costs}<div class="pilot-mini-card"><h3>Definition of done</h3><ul>${s.deliverables.map(d=>`<li>${d}</li>`).join("")}</ul></div></aside></div>
+      <aside>${costs}<div class="pilot-mini-card"><h3>Definition of done${track?" · check these off":""}</h3>${track?`<div class="pilot-checklist">${s.deliverables.map((d,di)=>`<label><input type="checkbox" data-pilot-check="${index}:${di}" ${state[`${index}:${di}`]?"checked":""}><span>${d}</span></label>`).join("")}</div><div class="pilot-progress"><i data-pilot-stage-bar="${index}" style="width:${progress.pct}%"></i></div>`:`<ul>${s.deliverables.map(d=>`<li>${d}</li>`).join("")}</ul>`}</div></aside></div>
       <div class="pilot-gate"><strong>Decision gate</strong><p>${s.gate}</p></div>${s.warning?`<div class="pilot-warning"><strong>Watch-out:</strong> ${s.warning}</div>`:""}
     </div></details>`;
 }
 
 function viewGrowthPilot(){
+  const totals=pilotProgressTotals(),state=pilotProgressState();
   return `<section class="growth-pilot"><div class="page-head"><div><h1>$10K Growth Pilot</h1><p>A 90–120 day test to prove FlockFam can turn new people into profitable customers.</p></div><div class="pilot-head-actions"><button class="btn ghost sm" data-pilot-collapse>Close all</button><button class="btn sm" data-pilot-expand>Open all</button></div></div>
-    <div class="stat-grid"><div class="stat"><div class="lbl">Total Capital</div><div class="val accent">$10K</div><div class="sub">Maximum—not a spending quota</div></div><div class="stat"><div class="lbl">Pilot Length</div><div class="val">90–120</div><div class="sub">Days to a scale / revise / stop decision</div></div><div class="stat"><div class="lbl">Creator Target</div><div class="val">21–26</div><div class="sub">15–20 seeded + about 6 paid</div></div><div class="stat"><div class="lbl">Primary Question</div><div class="val" style="font-size:20px;line-height:1.2;margin-top:9px">Can we acquire?</div><div class="sub">New customers at workable economics</div></div></div>
+    <div class="stat-grid"><div class="stat"><div class="lbl">Total Capital</div><div class="val accent">$10K</div><div class="sub">Maximum—not a spending quota</div></div><div class="stat"><div class="lbl">Pilot Length</div><div class="val">90–120</div><div class="sub">Days to a scale / revise / stop decision</div></div><div class="stat"><div class="lbl">Completion</div><div class="val green" data-pilot-total-pct>${totals.pct}%</div><div class="sub" data-pilot-total-count>${totals.done} of ${totals.total} gate items done</div></div><div class="stat"><div class="lbl">Primary Question</div><div class="val" style="font-size:20px;line-height:1.2;margin-top:9px">Can we acquire?</div><div class="sub">New customers at workable economics</div></div></div>
     <div class="panel"><div class="pilot-purpose"><strong>This is proof money, not scale money.</strong><p>The goal is not to make FlockFam huge in four months. It is to make the store buyable, create enough real outdoor content to find a message that connects, test that message with paid traffic, and leave with numbers strong enough to justify—or reject—a larger second investment.</p></div><div class="pilot-budget">${[["Store ready","$3,500","inventory + Shopify"],["Content ready","$3,250","creators + production"],["Organic proof","$0","find the winners"],["Paid test","$2,000","media spend"],["Winner reserve","$1,250","reorder or scale"]].map((x,i)=>`<div class="pilot-budget-step"><div class="pilot-kicker">Release ${i+1}</div><strong>${x[1]}</strong><span>${x[0]} · ${x[2]}</span></div>`).join("")}</div><div class="pilot-role-note"><strong>Four-priority rule:</strong> Every dollar, meeting, content shoot, and task must support one of four pilot priorities: <strong>Buyable Core, Content Engine, Acquisition Proof, or Retention & Community.</strong> If it does not, it waits until after the pilot.<br><br><strong>Who handles it:</strong> FlockFam owns product choice, creator approval, fulfillment, brand direction, and the weekly numbers. Creators make the content. A Shopify freelancer can be paid from the $1,000 store allowance if technical help is needed. The $2,000 paid-test budget is ad spend—not an agency fee. No full-service agency or monthly retainer is included in this pilot.</div></div>
-    <div class="pilot-stages">${PILOT_STAGES.map(pilotStageCard).join("")}</div>
+    <div class="panel pilot-start"><div><div class="pilot-kicker">Start here</div><h2>${totals.done?"Continue the first unfinished stage":"Open Stage 00: Know the numbers"}</h2><p>Read the plain-English explanation, follow the numbered actions, and check off only the items under “Definition of done” that are truly finished. The next budget release waits until the current decision gate is passed. Checklist progress stays saved in this browser; shared business records still belong in To-Do, CRM, Shopify, and linked documents.</p></div><button class="btn sm" data-pilot-first-open>${totals.done?"Continue pilot":"Open Stage 00"}</button></div>
+    <div class="pilot-stages">${PILOT_STAGES.map((stage,index)=>pilotStageCard(stage,index)).join("")}</div>
+    <div class="panel"><div class="panel-head"><h2>Where the work goes <span class="count">one source of truth for each job</span></h2></div><div class="pilot-connections">
+      <article><span class="pilot-connection-tag live">Live</span><h3>Shopify + Store Pulse</h3><p>Shopify owns products, orders, customers, and sellable inventory. The Overview shows commerce KPIs; do not copy inventory counts here.</p><button class="btn ghost sm" data-pilot-nav="overview">Open Overview</button></article>
+      <article><span class="pilot-connection-tag live">Live</span><h3>Creator CRM</h3><p>Stage 02 prospects, outreach, follow-ups, product promises, deliverables, rights, and payments live in the shared CRM.</p><button class="btn ghost sm" data-pilot-nav="crm">Open CRM</button></article>
+      <article><span class="pilot-connection-tag live">Live</span><h3>Tasks + product work</h3><p>Put owners, due dates, supplier gates, samples, and next actions in To-Do. Use Drop Schedule for customer-facing release timing.</p><button class="btn ghost sm" data-pilot-nav="todo">Open To-Do</button></article>
+      <article><span class="pilot-connection-tag summary">Summary lane</span><h3>Field Intel</h3><p>Tuesday/Friday research stays in its full brief. Only the latest useful opportunity, warning, and approved action should surface here.</p><button class="btn ghost sm" data-pilot-nav="docs">Open Docs</button></article>
+      <article><span class="pilot-connection-tag summary">Summary lane</span><h3>FLOCK DISPATCH</h3><p>FF and FF.move content is prepared, approved, scheduled, and published there. Command Center tracks status and exceptions—not composition.</p><span class="muted2">External tool link: add when ready</span></article>
+      <article><span class="pilot-connection-tag live">Live</span><h3>Approvals + agent work</h3><p>Prepared work may be summarized here, but spending, orders, creator commitments, publishing, and live Shopify changes remain owner-approved.</p><button class="btn ghost sm" data-pilot-nav="ai-ops">Open AI Operations</button></article>
+    </div></div>
+    <div class="panel"><div class="panel-head"><h2>Campaign Lite <span class="count">current campaign snapshot</span></h2></div><div class="campaign-lite">
+      <div><span>Name</span><strong>$10K Growth Pilot</strong></div><div><span>Primary goal</span><strong>Prove profitable new-customer acquisition</strong></div><div><span>Dates</span><strong>90–120 days · start date TBD</strong></div><div><span>Status</span><strong data-pilot-campaign-status>${totals.done===totals.total?"Complete":totals.done?"In progress":"Planning"}</strong></div><div><span>Budget</span><strong>$10,000 maximum</strong></div><div><span>Result</span><strong data-pilot-campaign-result>${totals.done===totals.total?"Complete pilot report required":"Pending evidence"}</strong></div>
+    </div><div class="pilot-role-note">Keep this card light. Detailed work belongs in the stage checklist, To-Do, Creator CRM, Shopify, and linked source files—not in a second campaign database.</div></div>
     <div class="panel"><div class="panel-head"><h2>Weekly Scoreboard <span class="count">same numbers every Monday</span></h2></div><div class="pilot-score-wrap"><table class="pilot-score"><thead><tr><th>Metric</th><th>What it answers</th><th>Formula / source</th><th>Why it matters</th></tr></thead><tbody>
       <tr><td>Gross sales</td><td>What was sold at ticket price?</td><td>Shopify sales before discounts and returns</td><td>Starting point—not money kept.</td></tr><tr><td>Net sales</td><td>What did FlockFam keep after leakage?</td><td>Gross sales − discounts − returns/refunds</td><td>Makes gross-to-net visible.</td></tr><tr><td>CM1</td><td>Are product economics healthy?</td><td>Net sales − COGS − inbound freight</td><td>Weekly product-margin pulse.</td></tr><tr><td>CM2</td><td>What remains before acquisition and overhead?</td><td>CM1 − outbound shipping − fulfillment − payment fees</td><td>Sets the practical CAC ceiling.</td></tr><tr><td>Sessions</td><td>How many visits reached the store?</td><td>Shopify analytics</td><td>Shows traffic volume.</td></tr><tr><td>Orders</td><td>How many purchases happened?</td><td>Shopify orders</td><td>The outcome that matters.</td></tr><tr><td>Conversion rate</td><td>Did the store turn visits into orders?</td><td>Orders ÷ sessions</td><td>Separates a traffic problem from a store problem.</td></tr><tr><td>AOV</td><td>How much is an average order?</td><td>Net sales ÷ orders</td><td>Bundles and patches can lift this.</td></tr><tr><td>New customers</td><td>Are strangers buying?</td><td>Shopify customer type</td><td>The central pilot question.</td></tr><tr><td>Marketing spend</td><td>What did acquisition cost this week?</td><td>Creator fees + media used for acquisition</td><td>Keeps true cost visible.</td></tr><tr><td>CAC</td><td>What did each new customer cost?</td><td>Acquisition spend ÷ new customers</td><td>Compare with break-even CAC.</td></tr><tr><td>MER</td><td>Did total revenue move with total marketing?</td><td>Total net sales ÷ total marketing spend</td><td>Helps reveal broader impact beyond platform attribution.</td></tr><tr><td>Email signups</td><td>Did we retain interested non-buyers?</td><td>Email platform</td><td>Creates an audience FlockFam owns.</td></tr><tr><td>Content output</td><td>Is the creator engine producing?</td><td>Usable assets received and posted</td><td>Prevents paying for vague “exposure.”</td></tr>
     </tbody></table></div><div class="pilot-example"><strong>Worked example:</strong> A $55 ticket-price order uses a $5 discount, so net sales are $50. Landed product cost is $16, making CM1 $34. FlockFam absorbs $5 shipping, $3 fulfillment, and $2 payment fees, making CM2/order contribution $24. The starting break-even CAC is therefore about $24. A $17 CAC leaves roughly $7 before general overhead; a $30 CAC loses roughly $6 on the first order.</div></div>
@@ -186,4 +222,20 @@ function bindGrowthPilot(){
   const stages=()=>[...root.querySelectorAll(".pilot-stage")];
   const open=root.querySelector("[data-pilot-expand]");if(open)open.onclick=()=>stages().forEach(x=>x.open=true);
   const close=root.querySelector("[data-pilot-collapse]");if(close)close.onclick=()=>stages().forEach(x=>x.open=false);
+  const first=root.querySelector("[data-pilot-first-open]");if(first)first.onclick=()=>{
+    const state=pilotProgressState();let i=PILOT_STAGES.findIndex((s,si)=>pilotStageProgress(si,state).done<s.deliverables.length);if(i<0)i=PILOT_STAGES.length-1;
+    const stage=stages()[i];stage.open=true;stage.scrollIntoView({behavior:"smooth",block:"start"});
+  };
+  root.querySelectorAll("[data-pilot-check]").forEach(box=>box.onchange=()=>{
+    const state=pilotProgressState();state[box.dataset.pilotCheck]=box.checked;if(!box.checked)delete state[box.dataset.pilotCheck];
+    localStorage.setItem(PILOT_PROGRESS_KEY,JSON.stringify(state));
+    const [si]=box.dataset.pilotCheck.split(":").map(Number),sp=pilotStageProgress(si,state),totals=pilotProgressTotals(state);
+    const summary=root.querySelector(`[data-pilot-stage-progress="${si}"]`),bar=root.querySelector(`[data-pilot-stage-bar="${si}"]`);
+    if(summary)summary.textContent=`${sp.done}/${sp.total} done · ${pilotStageState(si,state)}`;if(bar)bar.style.width=`${sp.pct}%`;
+    const pct=root.querySelector("[data-pilot-total-pct]"),count=root.querySelector("[data-pilot-total-count]");if(pct)pct.textContent=`${totals.pct}%`;if(count)count.textContent=`${totals.done} of ${totals.total} gate items done`;
+    const status=root.querySelector("[data-pilot-campaign-status]"),result=root.querySelector("[data-pilot-campaign-result]");if(status)status.textContent=totals.done===totals.total?"Complete":totals.done?"In progress":"Planning";if(result)result.textContent=totals.done===totals.total?"Complete pilot report required":"Pending evidence";
+  });
+  root.querySelectorAll("[data-pilot-nav]").forEach(button=>button.onclick=()=>{
+    VIEW=button.dataset.pilotNav;document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("active",b.dataset.view===VIEW));render();window.scrollTo({top:0,behavior:"instant"});
+  });
 }
