@@ -1,6 +1,6 @@
 # FIELD INTEL 2.0 — Implementation status (2026-10-06)
 
-**Status: FOUNDATION ONLY — NOT LIVE.** The previous ChatGPT automation remains disabled. No unattended research workers, dashboard controls, or production sender have been deployed. Do not report automated delivery as fixed.
+**Status: PARTIAL DEPLOYMENT — NOT LIVE.** The previous ChatGPT automation remains disabled. Six-topic research endpoint and dashboard status panel are deployed, but are not operational until credentials and access configuration are provided. Editor, golden-master renderer, production sender, and scheduler are not yet deployed. Do not report automated delivery as fixed.
 
 ## Existing infrastructure
 - Supabase project: FlockFam-Studio (bwnwvbdzeqgxdmsrkand).
@@ -41,3 +41,11 @@
 
 ## Non-negotiable
 One consolidated email only, Tuesdays and Fridays. No invented source dates, no stale patch filler, no silent send failure. Preserve the published template as the HTML golden master. No production send from an incomplete report.
+
+## Deployment update — October 6
+- Command Center now includes **Field Intel** navigation and a secured read-only status panel.
+- Edge Function `field-intel-control` v1 deployed (JWT required; staff allowlist `FIELD_INTEL_ADMINS` must be configured). Status and initialize endpoints only; initialize never sends.
+- Edge Function `field-intel-research` v1 deployed (worker-secret authentication). Six distinct topic assignments supported; research uses Tavily news search and separately extracts actual page text; undated results are excluded. Requires `FIELD_INTEL_WORKER_SECRET` and `FIELD_INTEL_RESEARCH_KEY`. No scheduled invocations.
+- Research result candidates still require editorial verification of facts and dates, not just source extraction. Do not send automatically.
+- Missing secure environment configuration cannot be populated from the available Supabase connector; set via Supabase Dashboard Edge Function Secrets. Also requires editorial model API credentials, Resend API credentials, golden-master renderer and tested scheduler.
+- Security audit confirmed four intentionally private RLS tables with no client policies; unrelated legacy auth/password warnings were present.
