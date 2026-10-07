@@ -234,7 +234,7 @@ table.grid td.spcell .ce{color:var(--accent)}
       <button data-view="payables"><span class="ic">＄</span> Payables</button>
       <button data-view="crm"><span class="ic">◎</span> CRM</button>
       <button data-view="ideas"><span class="ic">✦</span> Ideas</button>
-      <button data-view="docs"><span class="ic">▤</span> Docs</button>
+      <button data-view="docs"><span class="ic">▤</span> Docs</button>\n      <button data-view="field-intel"><span class="ic">◈</span> Field Intel</button>
     </nav>
     <div class="side-foot">
       <span class="em" id="userEmail"></span>
@@ -357,7 +357,7 @@ function render(){
   else if(VIEW==="crm")c.innerHTML=viewCRM();
   else if(VIEW==="dates")c.innerHTML=viewDates();
   else if(VIEW==="ideas")c.innerHTML=viewIdeas();
-  else if(VIEW==="docs")c.innerHTML=viewDocs();
+  else if(VIEW==="docs")c.innerHTML=viewDocs();\n  else if(VIEW==="field-intel")c.innerHTML=viewFieldIntel();
   bindActions();
   bindGrowthPilot();
   bindCRM();
@@ -365,6 +365,37 @@ function render(){
   bindStorePulse();
 }
 
+/* ===== FIELD INTEL ===== */
+function viewFieldIntel(){
+ return `<div class="page-head"><div><h1>FIELD INTEL</h1><p>Tuesday / Friday · One consolidated brief · Delivery safeguard</p></div></div>
+ <div class="card" style="padding:20px;border-left:4px solid #FF7533">
+ <h3 style="color:#FF7533">FIELD INTEL 2.0 · BUILD MODE</h3>
+ <p>Research workers and automatic sending are <strong>not active</strong>. The old scheduled automation is disabled. No production email will be sent from this panel.</p>
+ <button class="btn" id="fiRefresh">Refresh status</button>
+ <div id="fiStatus" style="margin-top:16px">Loading…</div></div>`;
+}
+async function loadFieldIntel(){
+ const node=document.getElementById("fiStatus");if(!node)return;
+ const refresh=document.getElementById("fiRefresh");if(refresh)refresh.onclick=loadFieldIntel;
+ node.textContent="Checking secured backend…";
+ const {data,error}=await sb.functions.invoke("field-intel-control",{body:{action:"status"}});
+ if(!document.getElementById("fiStatus"))return;
+ if(error||data?.error){node.textContent="Status unavailable: "+(data?.error||error?.message||"unknown")+". Requires approved staff access and backend configuration.";return;}
+ const cfg=data.configuration||{};
+ let h='<div class="stat-grid">';
+ for(const [label,ok] of [["Research credentials",cfg.research],["Editor credentials",cfg.editor],["Resend credentials",cfg.resend],["Automated delivery",data.automation_enabled]]){
+  h+='<div class="stat"><div class="lbl">'+esc(label)+'</div><div class="val" style="font-size:18px;color:'+(ok?'#43c187':'#e6b45a')+'">'+(ok?'READY':'NOT ACTIVE')+'</div></div>';
+ }
+ h+='</div><h3>Recent editions</h3>';
+ if(!(data.editions||[]).length)h+='<p>No staged editions yet.</p>';
+ for(const e of data.editions||[]){
+  const tasks=(data.assignments||[]).filter(a=>a.edition_date===e.edition_date);
+  h+='<div class="card" style="padding:14px;margin:8px 0"><strong>'+esc(e.edition_date)+' · '+esc(e.status)+'</strong><p>'+esc(e.subject||"Not prepared")+'</p><small>'+esc(tasks.map(t=>t.topic+': '+t.status).join(' · '))+'</small>'+(e.error?'<p>'+esc(e.error)+'</p>':'')+'</div>';
+ }
+ h+='<h3>Execution history</h3>';
+ for(const ev of data.events||[])h+='<p><small>'+esc(ev.occurred_at)+' · '+esc(ev.stage)+' — '+esc(ev.message)+'</small></p>';
+ node.innerHTML=h;
+}
 /* ===== OVERVIEW ===== */
 function nextOccurrence(d){ // annual dates -> next month/day occurrence
   if(!d)return null; const dt=new Date(d+"T00:00:00"); const now=today();
